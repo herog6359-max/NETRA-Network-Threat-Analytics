@@ -1,0 +1,103 @@
+{
+  "evaluation_timestamp": "2026-10-13T04:49:52Z",
+  "dataset_provenance": {
+    "source_file": "sample-cic-ids-attack.csv",
+    "source_path": "C:\\Users\\DELL\\NETRA\\datasets\\sample-cic-ids-attack.csv",
+    "raw_row_count": 16,
+    "raw_columns": [
+      "src_ip",
+      "dst_ip",
+      "src_port",
+      "dst_port",
+      "protocol",
+      "timestamp",
+      "flow_duration",
+      "total_fwd_packets",
+      "total_bwd_packets",
+      "total_fwd_bytes",
+      "total_bwd_bytes",
+      "fwd_pkt_len_mean",
+      "bwd_pkt_len_mean",
+      "syn_flag_count",
+      "ack_flag_count",
+      "rst_flag_count",
+      "average_packet_size",
+      "label"
+    ],
+    "clean_row_count": 16,
+    "label_distribution": {
+      "PortScan": 7,
+      "DoS-SYN_Flood": 5,
+      "DataExfiltration": 2,
+      "BENIGN": 2
+    },
+    "is_attack_count": 14,
+    "benign_count": 2
+  },
+  "split_information": {
+    "test_sequences": 2,
+    "total_horizon_evaluations": 10,
+    "test_attack_ratio": 0.699999988079071
+  },
+  "models": {
+    "pytorch_tcn": {
+      "precision": 0.7,
+      "recall": 1.0,
+      "f1_score": 0.8235,
+      "pr_auc": 0.8917,
+      "fpr": 1.0,
+      "confusion_matrix": {
+        "tn": 0,
+        "fp": 3,
+        "fn": 0,
+        "tp": 7
+      },
+      "sample_count": 10,
+      "positive_count": 7,
+      "negative_count": 3,
+      "decision_threshold": 0.5,
+      "inference_latency_ms": 1.93,
+      "model_name": "PyTorch Temporal Convolutional Network (TCN)",
+      "model_version": "2.1.0-tcn"
+    },
+    "logistic_regression": {
+      "precision": 0.7,
+      "recall": 1.0,
+      "f1_score": 0.8235,
+      "pr_auc": 0.7,
+      "fpr": 1.0,
+      "confusion_matrix": {
+        "tn": 0,
+        "fp": 3,
+        "fn": 0,
+        "tp": 7
+      },
+      "sample_count": 10,
+      "positive_count": 7,
+      "negative_count": 3,
+      "decision_threshold": 0.5,
+      "inference_latency_ms": 0.01,
+      "model_name": "Logistic Regression Temporal Baseline"
+    },
+    "deterministic_baseline": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "pr_auc": 0.7857,
+      "fpr": 0.0,
+      "confusion_matrix": {
+        "tn": 3,
+        "fp": 0,
+        "fn": 7,
+        "tp": 0
+      },
+      "sample_count": 10,
+      "positive_count": 7,
+      "negative_count": 3,
+      "decision_threshold": 0.5,
+      "inference_latency_ms": 0.04,
+      "model_name": "Java Deterministic Rule-Based Baseline"
+    }
+  },
+  "academic_disclosure": "Evaluation performed strictly on held-out test data from chronologically ordered CIC-IDS network flow telemetry without overlapping-window leakage. Positive class denotes future horizon attack presence (label != BENIGN)."
+}

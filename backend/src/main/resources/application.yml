@@ -1,0 +1,63 @@
+server:
+  address: 127.0.0.1
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: NETRA
+  
+  # Authoritative persistence layer: PostgreSQL
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/netra}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: NetraHikariPool
+      # Do not fail fast on startup if PostgreSQL is temporarily offline during dev/setup
+      initialization-fail-timeout: -1
+      connection-timeout: 3000
+      maximum-pool-size: 10
+      minimum-idle: 1
+      idle-timeout: 30000
+      max-lifetime: 1800000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        temp:
+          use_jdbc_metadata_defaults: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+
+netra:
+  forecasting:
+    active-engine: ${NETRA_ACTIVE_ENGINE:python-ml}
+    fallback-to-deterministic: ${NETRA_FALLBACK_DETERMINISTIC:true}
+  ml-service:
+    url: ${NETRA_ML_SERVICE_URL:http://localhost:8000}
+    timeout-ms: 3000

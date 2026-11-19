@@ -1,0 +1,146 @@
+{
+  "model_version": "2.1.0-tcn",
+  "device": "cpu",
+  "best_epoch": 9,
+  "best_val_loss": 0.795,
+  "total_epochs": 17,
+  "duration_seconds": 2.3,
+  "checkpoint_path": "C:\\Users\\DELL\\NETRA\\model-artifacts\\best_model.pt",
+  "provenance": {
+    "source_file": "sample-cic-ids-attack.csv",
+    "source_path": "C:\\Users\\DELL\\NETRA\\datasets\\sample-cic-ids-attack.csv",
+    "raw_row_count": 16,
+    "raw_columns": [
+      "src_ip",
+      "dst_ip",
+      "src_port",
+      "dst_port",
+      "protocol",
+      "timestamp",
+      "flow_duration",
+      "total_fwd_packets",
+      "total_bwd_packets",
+      "total_fwd_bytes",
+      "total_bwd_bytes",
+      "fwd_pkt_len_mean",
+      "bwd_pkt_len_mean",
+      "syn_flag_count",
+      "ack_flag_count",
+      "rst_flag_count",
+      "average_packet_size",
+      "label"
+    ],
+    "clean_row_count": 16,
+    "label_distribution": {
+      "PortScan": 7,
+      "DoS-SYN_Flood": 5,
+      "DataExfiltration": 2,
+      "BENIGN": 2
+    },
+    "is_attack_count": 14,
+    "benign_count": 2
+  },
+  "split_metadata": {
+    "train_samples": 4,
+    "val_samples": 1,
+    "test_samples": 2,
+    "feature_mean": [
+      1.9500000476837158,
+      1.7099997997283936,
+      0.6000000238418579,
+      0.6000000238418579,
+      0.0013000001199543476,
+      0.8529056310653687,
+      0.0,
+      0.07249999791383743,
+      0.0,
+      6.010407378198579e-05,
+      0.8741253614425659,
+      21.549999237060547,
+      1093.0,
+      16.759998321533203,
+      0.10000000894069672
+    ],
+    "feature_std": [
+      0.2179449498653412,
+      0.5915234684944153,
+      0.19999998807907104,
+      0.19999998807907104,
+      0.00045825759298168123,
+      0.19528284668922424,
+      1.0,
+      0.14066065847873688,
+      1.0,
+      7.692528743064031e-05,
+      0.23501533269882202,
+      12.122190475463867,
+      441.5608825683594,
+      9.152399063110352,
+      1.0
+    ],
+    "pos_weight": 0.05,
+    "train_attack_rate": 1.0
+  },
+  "history": [
+    {
+      "epoch": 8,
+      "train_loss": 0.6792,
+      "val_loss": 0.7984,
+      "lr": 0.002
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.6262,
+      "val_loss": 0.795,
+      "lr": 0.002
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.5812,
+      "val_loss": 0.7955,
+      "lr": 0.002
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.5238,
+      "val_loss": 0.8019,
+      "lr": 0.002
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.4114,
+      "val_loss": 0.8211,
+      "lr": 0.002
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.3413,
+      "val_loss": 0.8624,
+      "lr": 0.001
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.2396,
+      "val_loss": 0.8882,
+      "lr": 0.001
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.2643,
+      "val_loss": 0.8941,
+      "lr": 0.001
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.2304,
+      "val_loss": 0.8861,
+      "lr": 0.001
+    },
+    {
+      "epoch": 17,
+      "train_loss": 0.1961,
+      "val_loss": 0.865,
+      "lr": 0.0005
+    }
+  ]
+}
