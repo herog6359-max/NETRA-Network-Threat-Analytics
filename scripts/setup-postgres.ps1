@@ -8,8 +8,8 @@
 
 param(
     [string]$DbName = "netra",
-    [string]$DbUser = "postgres",
-    [string]$DbPass = "postgres",
+    [string]$DbUser = $(if ($env:SPRING_DATASOURCE_USERNAME) { $env:SPRING_DATASOURCE_USERNAME } else { "postgres" }),
+    [string]$DbPass = $env:SPRING_DATASOURCE_PASSWORD,
     [int]$Port = 5432
 )
 
@@ -73,7 +73,6 @@ if (Get-Command psql -ErrorAction SilentlyContinue) {
     # Check common installation locations
     $candidates = @(
         "$PSScriptRoot\..\tools\pgsql\bin\psql.exe",
-        "C:\Users\DELL\NETRA\tools\pgsql\bin\psql.exe",
         "C:\Program Files\PostgreSQL\17\bin\psql.exe",
         "C:\Program Files\PostgreSQL\16\bin\psql.exe",
         "C:\Program Files\PostgreSQL\15\bin\psql.exe",
@@ -91,21 +90,27 @@ if ($psqlPath) {
     Write-Host " [+] Found psql: $psqlPath" -ForegroundColor Green
     Write-Host " Ensuring '$DbName' database exists..." -ForegroundColor Yellow
     
-    $env:PGPASSWORD = $DbPass
-    & $psqlPath -h localhost -p $Port -U $DbUser -d postgres -c "SELECT 1 FROM pg_database WHERE datname='$DbName'" | Out-Null
-    $checkDb = & $psqlPath -h localhost -p $Port -U $DbUser -d postgres -t -c "SELECT 1 FROM pg_database WHERE datname='$DbName'"
-    
-    if (-not $checkDb -or $checkDb.Trim() -ne "1") {
-        Write-Host " Creating database '$DbName'..." -ForegroundColor Yellow
-        & $psqlPath -h localhost -p $Port -U $DbUser -d postgres -c "CREATE DATABASE $DbName;"
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host " [+] Database '$DbName' created successfully!" -ForegroundColor Green
+    if (-not $DbPass) { throw "Set SPRING_DATASOURCE_PASSWORD before running database setup." }
+    $previousPassword = $env:PGPASSWORD
+    try {
+        $env:PGPASSWORD = $DbPass
+        $checkDb = & $psqlPath -h localhost -p $Port -U $DbUser -d postgres -t -c "SELECT 1 FROM pg_database WHERE datname='$DbName'"
+
+        if ($LASTEXITCODE -ne 0) { throw "PostgreSQL connection failed." }
+        if (-not $checkDb -or $checkDb.Trim() -ne "1") {
+            Write-Host " Creating database '$DbName'..." -ForegroundColor Yellow
+            & $psqlPath -h localhost -p $Port -U $DbUser -d postgres -c "CREATE DATABASE $DbName;"
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host " [+] Database '$DbName' created successfully!" -ForegroundColor Green
+            } else {
+                Write-Host " [!] Could not create database '$DbName'. Verify that PostgreSQL is running and that the supplied credentials are correct." -ForegroundColor Red
+                exit $LASTEXITCODE
+            }
         } else {
-            Write-Host " [!] Could not create database '$DbName'. Verify that PostgreSQL is running and that the supplied credentials are correct." -ForegroundColor Red
-            exit $LASTEXITCODE
+            Write-Host " [+] Database '$DbName' already exists." -ForegroundColor Green
         }
-    } else {
-        Write-Host " [+] Database '$DbName' already exists." -ForegroundColor Green
+    } finally {
+        $env:PGPASSWORD = $previousPassword
     }
 } else {
     Write-Host " [!] 'psql' not currently in PATH. Once PostgreSQL is installed, ensure bin/ is added to PATH." -ForegroundColor Yellow
@@ -114,5 +119,4 @@ if ($psqlPath) {
 Write-Host "`nNETRA Configuration Summary:" -ForegroundColor Cyan
 Write-Host "  JDBC URL: jdbc:postgresql://localhost:5432/$DbName" -ForegroundColor White
 Write-Host "  User:     $DbUser" -ForegroundColor White
-Write-Host "  Password: $DbPass" -ForegroundColor White
 Write-Host "==========================================================" -ForegroundColor Cyan

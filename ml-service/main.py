@@ -215,7 +215,7 @@ def metadata():
         "device": str(MODEL_STATE["device"]),
         "features": FEATURE_NAMES,
         "attack_stages": ATTACK_STAGES,
-        "horizon_steps": HORIZON_STEPS,
+        "horizon_steps": (MODEL_STATE.get("metadata") or {}).get("horizon_steps", HORIZON_STEPS),
         "model_loaded": MODEL_STATE["loaded"],
         "evaluation_summary": metrics.get("models", {}).get("pytorch_tcn", {}),
         "validation_status": "LEGACY_TINY_SAMPLE_NOT_GENERALISATION_EVIDENCE",

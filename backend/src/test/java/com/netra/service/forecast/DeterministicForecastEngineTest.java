@@ -55,25 +55,19 @@ class DeterministicForecastEngineTest {
             featureExtractor
         );
         
-        when(forecastRunRepository.save(any(ForecastRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
     }
 
     @Test
-    @DisplayName("Should handle empty traffic flow window with baseline risk and low confidence")
+    @DisplayName("Reject forecasting without traffic data")
     void testEmptyFlows() {
         Instant now = Instant.now();
         Instant start = now.minus(1, ChronoUnit.HOURS);
         when(flowRepository.findByTimeWindow(start, now)).thenReturn(List.of());
 
-        ForecastRun result = engine.forecast(start, now, 6, Map.of());
-
-        assertNotNull(result);
-        assertEquals("deterministic-baseline", result.getModelName());
-        assertEquals(Severity.INFO, result.getRiskLevel());
-        assertEquals(0.0, result.getCurrentRiskScore());
-        assertEquals(6, result.getHorizonSteps());
-        assertEquals(0.0, result.getDataQualityScore());
-        assertTrue(result.isDemo());
+        var error = assertThrows(IllegalArgumentException.class,
+                () -> engine.forecast(start, now, 6, Map.of()));
+        assertTrue(error.getMessage().contains("No flow-feature data"));
     }
 
     @Test
@@ -81,6 +75,7 @@ class DeterministicForecastEngineTest {
     void testSynFloodEscalation() {
         Instant now = Instant.now();
         Instant start = now.minus(1, ChronoUnit.HOURS);
+        when(forecastRunRepository.save(any(ForecastRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
         List<TrafficFlow> flows = new ArrayList<>();
 
         for (int i = 0; i < 200; i++) {

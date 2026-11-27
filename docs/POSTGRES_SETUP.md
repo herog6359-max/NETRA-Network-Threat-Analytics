@@ -13,7 +13,8 @@ scripts/setup-postgres.ps1
 
 To run the script:
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/setup-postgres.ps1
+$env:SPRING_DATASOURCE_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Local PostgreSQL password' -AsSecureString)).Password
+.\scripts\setup-postgres.ps1
 ```
 
 ### What this script does:
@@ -51,7 +52,7 @@ NETRA connects to PostgreSQL using the following defaults configured in `backend
 | :--- | :--- | :--- |
 | **JDBC URL** | `jdbc:postgresql://localhost:5432/netra` | `SPRING_DATASOURCE_URL` |
 | **Username** | `postgres` | `SPRING_DATASOURCE_USERNAME` |
-| **Password** | `postgres` | `SPRING_DATASOURCE_PASSWORD` |
+| **Password** | Supply locally | `SPRING_DATASOURCE_PASSWORD` |
 | **Driver** | `org.postgresql.Driver` | — |
 | **Fail Timeout** | `-1` (resilient startup) | — |
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, CheckCircle2, AlertCircle, X, Shield, Bell, HelpCircle, Key, UserCheck } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, X, Bell, HelpCircle, Key, UserCheck } from 'lucide-react';
 
 interface TelegramAlertModalProps {
   isOpen: boolean;
@@ -104,7 +104,6 @@ export const TelegramAlertModal: React.FC<TelegramAlertModalProps> = ({ isOpen, 
 
   if (!isOpen) return null;
 
-  const isConfigured = status?.configured || (botToken.trim() && chatId.trim());
 
   return (
     <div

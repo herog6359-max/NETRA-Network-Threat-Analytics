@@ -149,42 +149,30 @@ class PythonMLForecastEngineTest {
     }
 
     @Test
-    @DisplayName("Should execute live forecast against local FastAPI service or fallback truthfully")
+    @DisplayName("Reject a neural forecast without flow data")
     void testForecastExecution() {
         Instant now = Instant.now();
         Instant past = now.minus(1, ChronoUnit.HOURS);
 
         when(flowRepository.findByTimeWindow(any(), any())).thenReturn(Collections.emptyList());
 
-        ForecastRun run = engine.forecast(past, now, 6, Map.of());
-
-        assertNotNull(run);
-        assertNotNull(run.getModelName());
-        assertTrue(
-            run.getModelName().contains("PyTorch") || run.getModelName().contains("fallback"),
-            "Model name must truthfully identify neural engine or fallback"
-        );
-        assertTrue(run.getCurrentRiskScore() >= 0.0 && run.getCurrentRiskScore() <= 1.0);
+        var error = assertThrows(IllegalArgumentException.class,
+                () -> engine.forecast(past, now, 6, Map.of()));
+        assertTrue(error.getMessage().contains("No flow-feature data"));
     }
 
     @Test
     @DisplayName("Should engage deterministic fallback when ML service fails")
     void testDeterministicFallbackOnFailure() {
-        // Point to unreachable port to force failure
-        PythonMLForecastEngine brokenEngine = new PythonMLForecastEngine(
-            flowRepository,
-            forecastRunRepository,
-            horizonRepository,
-            attributionRepository,
-            featureExtractor,
-            fakeFallbackEngine,
-            httpClient
-        );
-
         Instant now = Instant.now();
-        ForecastRun run = brokenEngine.forecast(now.minus(1, ChronoUnit.HOURS), now, 6, Map.of());
+        TrafficFlow first = new TrafficFlow();
+        first.setFlowTimestamp(now.minusSeconds(10));
+        TrafficFlow second = new TrafficFlow();
+        second.setFlowTimestamp(now);
+        when(flowRepository.findByTimeWindow(any(), any())).thenReturn(java.util.List.of(first, second));
+        ForecastRun run = engine.forecast(now.minus(1, ChronoUnit.HOURS), now, 6, Map.of());
 
         assertNotNull(run);
-        assertTrue(run.getModelName().contains("fallback") || run.getModelName().contains("PyTorch"));
+        assertTrue(run.getModelName().contains("fallback"));
     }
 }

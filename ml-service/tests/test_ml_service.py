@@ -56,12 +56,22 @@ def test_chronological_splits_and_normalization(test_df):
     and feature normalization uses training split statistics only.
     """
     X, y_risk, y_stage, _ = build_temporal_dataset(test_df, window_size=4, horizon_steps=2)
+    with pytest.raises(ValueError, match="Insufficient independent temporal data"):
+        chronological_train_val_test_split(X, y_risk, y_stage)
+
+    # Ordered synthetic windows make the training-only mean directly checkable.
+    X = np.arange(80 * 4 * NUM_FEATURES, dtype=np.float32).reshape(80, 4, NUM_FEATURES)
+    y_risk = np.zeros((80, 2), dtype=np.float32)
+    y_stage = np.zeros((80, 5), dtype=np.float32)
     splits, meta = chronological_train_val_test_split(X, y_risk, y_stage, train_ratio=0.6, val_ratio=0.2)
 
     assert "X_train" in splits and "X_val" in splits and "X_test" in splits
     assert len(splits["X_train"]) > 0
     assert "feature_mean" in meta and "feature_std" in meta
-    assert len(meta["feature_mean"]) == NUM_FEATURES
+    train_end = meta["split_indices"]["train"][1]
+    np.testing.assert_allclose(meta["feature_mean"], X[:train_end].mean(axis=(0, 1)))
+    assert meta["split_indices"]["validation"][0] - train_end >= 6
+    assert meta["split_indices"]["test"][0] - meta["split_indices"]["validation"][1] >= 6
 
 
 def test_tcn_forward_pass_dimensions():
@@ -100,35 +110,18 @@ def test_fastapi_health_endpoint():
     assert data["service"] == "NETRA PyTorch ML Service"
 
 
-def test_fastapi_predict_endpoint_valid_payload():
-    client = TestClient(app)
-    payload = {
-        "horizon_steps": 6,
-        "features": {
-            "syn_ratio": 0.45,
-            "unique_dst_ports": 0.35,
-            "flow_rate": 12.0,
-            "packet_rate": 50.0,
-        },
-        "model": "pytorch-tcn",
-        "mode": "PURE_NEURAL",
-    }
-    response = client.post("/predict", json=payload)
-    assert response.status_code in [200, 503]
-    if response.status_code == 200:
-        data = response.json()
-        assert "horizons" in data
-        assert len(data["horizons"]) == 6
-        assert data["inference_mode"] == "PURE_NEURAL"
-        assert "attributions" in data
-        assert "model_name" in data
+def test_fastapi_rejects_single_feature_snapshot():
+    with TestClient(app) as client:
+        response = client.post("/predict", json={"horizon_steps": 6, "features": {"syn_ratio": 0.45}})
+        assert response.status_code == 422
+        assert "timestamped" in response.json()["detail"]
 
 
 def test_fastapi_sequence_input_contract():
     with TestClient(app) as client:
         # Ordered temporal sequence of 5 historical slices
         sequence = [
-            {"timestamp": f"2026-10-13T05:00:0{i}Z", "features": {"syn_ratio": 0.1 * i, "packet_rate": 10.0 * i}}
+            {"timestamp": f"2026-10-13T05:00:0{i}Z", "features": {name: 0.1 * i for name in FEATURE_NAMES}}
             for i in range(5)
         ]
         payload = {
@@ -143,7 +136,8 @@ def test_fastapi_sequence_input_contract():
         assert data["inference_mode"] == "PURE_NEURAL"
         assert data["sequence_mode"] == "ORDERED_TEMPORAL_SEQUENCE"
         assert data["sequence_length"] == 5
-        assert len(data["horizons"]) == 6
+        model_steps = client.get("/metadata").json()["horizon_steps"]
+        assert len(data["horizons"]) == min(payload["horizon_steps"], model_steps)
 
 
 def test_fastapi_predict_invalid_schema():

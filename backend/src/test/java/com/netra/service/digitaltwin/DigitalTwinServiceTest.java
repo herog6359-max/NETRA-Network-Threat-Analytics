@@ -138,7 +138,7 @@ class DigitalTwinServiceTest {
     }
 
     @Test
-    @DisplayName("What-If simulation with zero baseline flows should safely return 0% reduction without arithmetic error")
+    @DisplayName("Reject a what-if scenario when there is no stored traffic")
     void testWhatIfZeroBaselineSafety() {
         when(flowRepository.findByTimeWindow(any(), any())).thenReturn(new ArrayList<>());
 
@@ -146,10 +146,8 @@ class DigitalTwinServiceTest {
         request.setInterventionType("ISOLATE_HOST");
         request.setTargetHost("10.0.0.1");
 
-        WhatIfScenarioResponse response = digitalTwinService.simulateWhatIfScenario(request);
-        assertNotNull(response);
-        assertFalse(Double.isNaN(response.getRiskReductionPercent()));
-        assertFalse(Double.isInfinite(response.getRiskReductionPercent()));
-        assertEquals(0.0, response.getRiskDelta(), 1.0);
+        var error = assertThrows(IllegalArgumentException.class,
+                () -> digitalTwinService.simulateWhatIfScenario(request));
+        assertTrue(error.getMessage().contains("No stored traffic"));
     }
 }
